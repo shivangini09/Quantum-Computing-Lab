@@ -1,4 +1,5 @@
-name: Lint (nbqa + pylint)
+
+name: Lint, Markdown & License (LML)
 
 on:
   push:
@@ -7,14 +8,17 @@ on:
     branches: [ main, master ]
 
 jobs:
-  lint:
-    name: Run nbqa + pylint via uv
+  lint-markdown-license:
+    name: Run Lint, Markdown & License checks
     runs-on: ubuntu-latest
 
     steps:
       - name: 🧱 Checkout repository
         uses: actions/checkout@v4
 
+      # -------------------------------------------------
+      # Install uv and set up Python environment
+      # -------------------------------------------------
       - name: ⚙️ Install uv
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -23,8 +27,28 @@ jobs:
       - name: 📦 Sync environment
         run: uv sync
 
-      - name: 🧹 Run linting (nbqa + pylint)
+      # -------------------------------------------------
+      # Lint Python and Notebook files via your script
+      # -------------------------------------------------
+      - name: 🧹 Run nbqa + pylint lint
         run: |
           chmod +x scripts/lint.sh
           ./scripts/lint.sh
+
+      # -------------------------------------------------
+      # Markdown lint using markdownlint-cli2
+      # -------------------------------------------------
+      - name: 📝 Check Markdown formatting
+        run: |
+          uv run pip install markdownlint-cli2
+          uv run markdownlint-cli2 "**/*.md"
+
+      # -------------------------------------------------
+      # License header / compliance check
+      # -------------------------------------------------
+      - name: ⚖️ Verify License Headers
+        run: |
+          uv run pip install reuse
+          uv run reuse lint
+
 
