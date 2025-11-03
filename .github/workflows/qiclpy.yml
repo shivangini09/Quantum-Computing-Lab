@@ -8,11 +8,15 @@ on:
 
 jobs:
   lint:
+    name: Run linters
     runs-on: ubuntu-latest
+
     steps:
+      # --- Checkout code ---
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # --- Setup Python and uv ---
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -21,12 +25,13 @@ jobs:
       - name: Install uv
         run: pip install uv
 
-      - name: Install project dependencies
+      - name: Sync dependencies
         run: uv sync --dev
 
       - name: Install nbqa and pylint
         run: uv add nbqa pylint --dev
 
+      # --- Setup Node.js for Markdown linting ---
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -35,17 +40,29 @@ jobs:
       - name: Install markdownlint-cli2
         run: npm install -g markdownlint-cli2
 
+      # --- Lint Python and notebooks ---
       - name: Run nbqa pylint
         run: |
           mkdir -p scripts
-          echo '#!/usr/bin/env bash' > scripts/lint.sh
-          echo 'set -e' >> scripts/lint.sh
-          echo 'cd "$(git rev-parse --show-toplevel)"' >> scripts/lint.sh
-          echo 'PY_FILES=$(git ls-files "*.py" | xargs)' >> scripts/lint.sh
-          echo 'NB_FILES=$(find . -type f -name "*.ipynb" -not -path "*/.ipynb_checkpoints/*" | xargs)' >> scripts/lint.sh
-          echo 'uv run nbqa pylint --disable=R0801 --exit-zero $PY_FILES $NB_FILES' >> scripts/lint.sh
+          cat > scripts/lint.sh <<'EOF'
+          #!/usr/bin/env bash
+          set -e
+
+          cd "$(git rev-parse --show-toplevel)"
+          echo "🔍 Collecting files to lint..."
+
+          PY_FILES=$(git ls-files '*.py')
+          NB_FILES=$(find . -type f -name "*.ipynb" -not -path "*/.ipynb_checkpoints/*")
+
+          echo "🚀 Running pylint via nbqa..."
+          uv run nbqa pylint --disable=R0801,import-error --exit-zero -- $PY_FILES $NB_FILES
+
+          echo "✅ Python and notebook linting complete!"
+          EOF
+
           chmod +x scripts/lint.sh
           ./scripts/lint.sh
 
+      # --- Lint Markdown files ---
       - name: Run markdownlint-cli2
         run: markdownlint-cli2 "**/*.md"
