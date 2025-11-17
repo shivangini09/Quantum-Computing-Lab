@@ -27,11 +27,10 @@ jobs:
         run: pip install uv
 
       - name: Sync dependencies
-        run: uv sync --dev
+        run: uv sync
 
       - name: Install nbqa and pylint
         run: uv add nbqa pylint 
-             uv add pandas
 
       # --- Setup Node.js for markdown linting ---
       - name: Setup Node.js
