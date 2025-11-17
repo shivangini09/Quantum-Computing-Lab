@@ -7,9 +7,11 @@ requires-python = ">=3.12"
 dependencies = [
     "ipykernel>=7.1.0",
     "matplotlib>=3.10.7",
+    "pandas>=2.3.3",
     "pip>=25.3",
     "pylatexenc>=2.10",
     "qiskit>=2.2.2",
     "qiskit-aer>=0.17.2",
     "qiskit-ibm-runtime>=0.43.1",
+    "yfinance>=0.2.66",
 ]
